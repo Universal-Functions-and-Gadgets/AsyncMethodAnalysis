@@ -1,0 +1,15 @@
+﻿<Project>
+    <PropertyGroup>
+        <Copyright>Copyright 2023 (c) UFG. All rights reserved.</Copyright>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <NoWarn>NU1603,NU1701</NoWarn>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+        <AnalysisMode>Recommended</AnalysisMode>
+        <IsPackable>false</IsPackable>
+        <Platforms>AnyCPU</Platforms>
+    </PropertyGroup>
+</Project>
