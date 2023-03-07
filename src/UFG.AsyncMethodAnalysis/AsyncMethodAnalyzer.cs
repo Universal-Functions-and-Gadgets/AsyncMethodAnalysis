@@ -3,16 +3,16 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
-using UFG.AsyncMethodAnalysis.Attributes;
 
 namespace UFG.AsyncMethodAnalysis;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class AsyncAnalyzerAnalyzer : DiagnosticAnalyzer
 {
-   // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
-   // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Localizing%20Analyzers.md for more on localization
+   internal const string CommentLineStart = "#";
+   internal const string Extension = ".txt";
+   internal const string IgnoredFileNamePrefix = "AsyncMethodAnalysis.Ignored";
+   internal const string IgnoredFileName = IgnoredFileNamePrefix + Extension;
 
    private static readonly Type s_resourcesType = typeof(Resources);
    private static readonly ImmutableArray<string> s_mainVariants = ImmutableArray.Create("Main", "<Main>$");
@@ -53,9 +53,6 @@ public class AsyncAnalyzerAnalyzer : DiagnosticAnalyzer
 
       context.RegisterCompilationStartAction(compilationContext =>
       {
-         var ignoreAttrType = compilationContext
-            .Compilation
-            .GetTypeByMetadataName(typeof(IgnoreAsyncMethodAnalysisForAttribute).FullName!);
          var taskType = compilationContext.Compilation.GetTypeByMetadataName(typeof(Task).FullName!);
          var cancellationTokenType = compilationContext
             .Compilation
@@ -66,11 +63,11 @@ public class AsyncAnalyzerAnalyzer : DiagnosticAnalyzer
             return;
          }
 
-         var analyzer = new CompilationAnalyzer(ignoreAttrType, taskType, cancellationTokenType);
+         var analyzer = new CompilationAnalyzer(taskType, cancellationTokenType);
 
          compilationContext.RegisterSymbolAction(analyzer.AnalyzeSymbol, SymbolKind.Method);
 
-         compilationContext.RegisterOperationBlockAction(analyzer.AnalyzeBlock);
+         compilationContext.RegisterAdditionalFileAction(analyzer.AnalyzeAdditionalFile);
 
          compilationContext.RegisterCompilationEndAction(analyzer.CompilationEndAction);
       });
@@ -124,7 +121,6 @@ public class AsyncAnalyzerAnalyzer : DiagnosticAnalyzer
 
    private sealed class CompilationAnalyzer
    {
-      private readonly INamedTypeSymbol? _ignoreAttributeType;
       private readonly INamedTypeSymbol _taskType;
       private readonly INamedTypeSymbol _cancellationTokenType;
 
@@ -139,11 +135,9 @@ public class AsyncAnalyzerAnalyzer : DiagnosticAnalyzer
       private readonly ConcurrentBag<INamedTypeSymbol> _ignoredTypes = new();
 
       public CompilationAnalyzer(
-         INamedTypeSymbol? ignoreAttributeType,
          INamedTypeSymbol taskType,
          INamedTypeSymbol cancellationTokenType)
       {
-         _ignoreAttributeType = ignoreAttributeType;
          _taskType = taskType;
          _cancellationTokenType = cancellationTokenType;
       }
@@ -173,37 +167,6 @@ public class AsyncAnalyzerAnalyzer : DiagnosticAnalyzer
                break;
             default:
                throw new ArgumentOutOfRangeException(nameof(context), @"Unknown symbol kind");
-         }
-      }
-
-      public void AnalyzeBlock(OperationBlockAnalysisContext context)
-      {
-         if (_ignoreAttributeType is null
-             || context.OwningSymbol.Kind != SymbolKind.Namespace
-             || !context.OperationBlocks.All(x => x.Kind == OperationKind.Attribute))
-         {
-            return;
-         }
-
-         //pull out the type name arguments from the attribute ctor and get the type
-         var ignores = context
-            .OperationBlocks
-            .OfType<IAttributeOperation>()
-            .SelectMany(x => x
-               .ChildOperations
-               .OfType<IObjectCreationOperation>()
-               .Where(y => SymbolEqualityComparer.Default.Equals(y.Type, _ignoreAttributeType)))
-            .Select(x => x.Arguments.Single().Value.ConstantValue)
-            .Where(x => x.HasValue)
-            .Select(x => x.Value!.ToString())
-            .Select(x => context.Compilation.GetTypeByMetadataName(x))
-            .Where(x => x is { })
-            .Select(x => x!)
-            .ToList();
-
-         foreach (var ig in ignores)
-         {
-            _ignoredTypes.Add(ig);
          }
       }
 
@@ -290,6 +253,37 @@ public class AsyncAnalyzerAnalyzer : DiagnosticAnalyzer
          }
 
          return ia;
+      }
+
+      public void AnalyzeAdditionalFile(AdditionalFileAnalysisContext analysisContext)
+      {
+         var fileName = Path.GetFileName(analysisContext.AdditionalFile.Path);
+         if (!string.Equals(fileName, IgnoredFileName, StringComparison.Ordinal))
+         {
+            return;
+         }
+
+         var text = analysisContext.AdditionalFile.GetText();
+         if (text is null)
+         {
+            return;
+         }
+
+         var filtered = text
+            .Lines
+            .Select(x => x.ToString().Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Where(x => !x.StartsWith(CommentLineStart));
+
+         foreach (var line in filtered)
+         {
+            var type = analysisContext.Compilation.GetTypeByMetadataName(line);
+            if (type is null)
+            {
+               continue;
+            }
+            _ignoredTypes.Add(type);
+         }
       }
    }
 }

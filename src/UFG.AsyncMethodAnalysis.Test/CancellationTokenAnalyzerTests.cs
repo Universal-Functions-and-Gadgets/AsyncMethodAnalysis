@@ -283,9 +283,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using UFG.AsyncMethodAnalyzer.Attributes;
 
-[assembly: IgnoreAsyncMethodAnalysisFor("ConsoleApplication1.B"), IgnoreAsyncMethodAnalysisFor("ConsoleApplication1.IGetStuff")];
-Console.WriteLine("Hello");
-
 namespace ConsoleApplication1
 {
     interface IGetStuff
@@ -306,14 +303,23 @@ namespace ConsoleApplication1
     }
 }
 """;
+      var ignoreText = """
+ConsoleApplication1.IGetStuff
+ConsoleApplication1.B
+""";
+
       var test = new VerifyCS.Test()
       {
-         TestState = { Sources = { global, IgnoreAttribute }, OutputKind = OutputKind.ConsoleApplication },
+         TestState =
+         {
+            Sources = { global, IgnoreAttribute }, OutputKind = OutputKind.DynamicallyLinkedLibrary,
+         },
          ExpectedDiagnostics =
          {
             GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.CancellationTokenRule, "MethodName2Async")
          }
       };
+      test.TestState.AdditionalFiles.Add((AsyncAnalyzerAnalyzer.IgnoredFileName, ignoreText));
 
       await test.RunAsync();
    }

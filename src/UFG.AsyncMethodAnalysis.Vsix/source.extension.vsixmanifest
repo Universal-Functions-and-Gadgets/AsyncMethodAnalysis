@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="UFG.AsyncMethodAnalysis.880e7605-58da-4c68-8e0a-41bc35b3baa8" Version="1.0" Language="en-US" Publisher="pwilliams8"/>
+    <Identity Id="UFG.AsyncMethodAnalysis.880e7605-58da-4c68-8e0a-41bc35b3baa8" Version="1.0" Language="en-US" Publisher="UFG"/>
     <DisplayName>UFG.AsyncMethodAnalysis</DisplayName>
-    <Description xml:space="preserve">This is a sample diagnostic extension for the .NET Compiler Platform ("Roslyn").</Description>
+    <Description xml:space="preserve">Diagnostic extension for analyzing async methods</Description>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0,)" />

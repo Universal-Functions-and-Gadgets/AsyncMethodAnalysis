@@ -17,4 +17,7 @@
     <EmbeddedResource Update="Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="UFG.AsyncMethodAnalysis.Test" />
+  </ItemGroup>
 </Project>

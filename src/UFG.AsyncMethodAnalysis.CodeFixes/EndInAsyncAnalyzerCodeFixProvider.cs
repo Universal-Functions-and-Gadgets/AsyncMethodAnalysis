@@ -54,7 +54,7 @@ public class EndInAsyncAnalyzerCodeFixProvider : CodeFixProvider
       MethodDeclarationSyntax methodDecl,
       CancellationToken cancellationToken)
    {
-      // Compute new uppercase name.
+      // Compute new async method name
       var identifierToken = methodDecl.Identifier;
       var newName = $"{identifierToken.Text}Async";
 
@@ -72,7 +72,7 @@ public class EndInAsyncAnalyzerCodeFixProvider : CodeFixProvider
             cancellationToken)
          .ConfigureAwait(false);
 
-      // Return the new solution with the now-uppercase type name.
+      // Return the new solution with the new name.
       return newSolution;
    }
 }

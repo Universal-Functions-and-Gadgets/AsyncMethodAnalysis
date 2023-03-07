@@ -64,7 +64,7 @@ public class CancellationTokenAsyncAnalyzerCodeFixProvider : CodeFixProvider
       var updatedTree = (await syntaxTree!.GetRootAsync(cancellationToken))
          .ReplaceNode(methodDecl, updatedMethod);
 
-      // Return the new solution with the now-uppercase type name.
+      // Return the document with the new syntax tree
       return document.WithSyntaxRoot(updatedTree);
    }
 }
