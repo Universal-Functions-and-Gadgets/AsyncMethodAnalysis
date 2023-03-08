@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <PackageId>UFG.AsyncMethodAnalysis</PackageId>
-    <PackageVersion>0.1.0-alpha.6</PackageVersion>
+    <PackageVersion>0.1.0-beta.1</PackageVersion>
     <Authors>UFG</Authors>
     <PackageLicenseUrl>https://github.com/Universal-Functions-and-Gadgets/AsyncMethodAnalysis/blob/main/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Universal-Functions-and-Gadgets/AsyncMethodAnalysis</PackageProjectUrl>
