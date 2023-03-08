@@ -19,22 +19,6 @@ namespace AsyncAnalyzer.Test
          await VerifyCS.VerifyAnalyzerAsync(test);
       }
 
-      private static string IgnoreAttribute => """
-namespace UFG.AsyncMethodAnalyzer.Attributes
-{
-    [System.AttributeUsage(System.AttributeTargets.Assembly, AllowMultiple = true)]
-    public class IgnoreAsyncMethodAnalysisForAttribute : System.Attribute
-    {
-        public string FullTypeName { get; }
-
-        public IgnoreAsyncMethodAnalysisForAttribute(string fullTypeName)
-        {
-            FullTypeName = fullTypeName;
-        }
-    }
-}
-""";
-
       //Diagnostic and CodeFix both triggered and checked for
       [Fact]
       public async Task DetectsMethodWithoutAsync()
@@ -172,10 +156,6 @@ namespace UFG.AsyncMethodAnalyzer.Attributes
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UFG.AsyncMethodAnalyzer.Attributes;
-
-[assembly: IgnoreAsyncMethodAnalysisFor("ConsoleApplication1.IMyInter")];
-Console.WriteLine("Hello");
 
 namespace ConsoleApplication1
 {
@@ -193,8 +173,9 @@ namespace ConsoleApplication1
 
          var test = new VerifyCS.Test()
          {
-            TestState = { Sources = { global, IgnoreAttribute }, OutputKind = OutputKind.ConsoleApplication }
+            TestState = { Sources = { global } }
          };
+         test.TestState.AdditionalFiles.Add((AsyncMethodAnalyzer.IgnoredFileName, "ConsoleApplication1.IMyInter"));
 
          await test.RunAsync();
       }
@@ -206,9 +187,7 @@ namespace ConsoleApplication1
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UFG.AsyncMethodAnalyzer.Attributes;
 
-[assembly: IgnoreAsyncMethodAnalysisFor("ConsoleApplication1.C")];
 Console.WriteLine("Hello");
 
 namespace ConsoleApplication1
@@ -222,8 +201,9 @@ namespace ConsoleApplication1
 
          var test = new VerifyCS.Test()
          {
-            TestState = { Sources = { global, IgnoreAttribute }, OutputKind = OutputKind.ConsoleApplication }
+            TestState = { Sources = { global }, OutputKind = OutputKind.ConsoleApplication }
          };
+         test.TestState.AdditionalFiles.Add((AsyncMethodAnalyzer.IgnoredFileName, "ConsoleApplication1.C"));
 
          await test.RunAsync();
       }
@@ -235,10 +215,6 @@ namespace ConsoleApplication1
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UFG.AsyncMethodAnalyzer.Attributes;
-
-[assembly: IgnoreAsyncMethodAnalysisFor("ConsoleApplication1.B")];
-Console.WriteLine("Hello");
 
 namespace ConsoleApplication1
 {
@@ -256,8 +232,9 @@ namespace ConsoleApplication1
 
          var test = new VerifyCS.Test()
          {
-            TestState = { Sources = { global, IgnoreAttribute }, OutputKind = OutputKind.ConsoleApplication }
+            TestState = { Sources = { global } }
          };
+         test.TestState.AdditionalFiles.Add((AsyncMethodAnalyzer.IgnoredFileName, "ConsoleApplication1.B"));
 
          await test.RunAsync();
       }
@@ -269,10 +246,6 @@ namespace ConsoleApplication1
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UFG.AsyncMethodAnalyzer.Attributes;
-
-[assembly: IgnoreAsyncMethodAnalysisFor("ConsoleApplication1.B"), IgnoreAsyncMethodAnalysisFor("ConsoleApplication1.IGetStuff")];
-Console.WriteLine("Hello");
 
 namespace ConsoleApplication1
 {
@@ -296,9 +269,14 @@ namespace ConsoleApplication1
 """;
          var test = new VerifyCS.Test()
          {
-            TestState = { Sources = { global, IgnoreAttribute }, OutputKind = OutputKind.ConsoleApplication },
+            TestState = { Sources = { global } },
             ExpectedDiagnostics = { GetCSharpResultAt(0, AsyncMethodAnalyzer.EndsInAsyncRule, "MethodName2") }
          };
+         var ignoreText = """
+ConsoleApplication1.B
+ConsoleApplication1.IGetStuff
+""";
+         test.TestState.AdditionalFiles.Add((AsyncMethodAnalyzer.IgnoredFileName, ignoreText));
 
          await test.RunAsync();
       }

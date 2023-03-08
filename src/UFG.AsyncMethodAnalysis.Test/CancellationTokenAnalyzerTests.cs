@@ -281,7 +281,6 @@ public class CancellationTokenAnalyzerTests
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UFG.AsyncMethodAnalyzer.Attributes;
 
 namespace ConsoleApplication1
 {
@@ -304,7 +303,9 @@ namespace ConsoleApplication1
 }
 """;
       var ignoreText = """
+# fun comment here
 ConsoleApplication1.IGetStuff
+# another for safe measure
 ConsoleApplication1.B
 """;
 
@@ -312,7 +313,7 @@ ConsoleApplication1.B
       {
          TestState =
          {
-            Sources = { global }, OutputKind = OutputKind.DynamicallyLinkedLibrary,
+            Sources = { global }
          },
          ExpectedDiagnostics =
          {
