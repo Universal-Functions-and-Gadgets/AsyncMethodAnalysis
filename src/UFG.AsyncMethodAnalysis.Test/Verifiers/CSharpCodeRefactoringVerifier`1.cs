@@ -1,14 +1,14 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Testing;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace UFG.AsyncMethodAnalysis.Test
 {
+   [SuppressMessage("Design", "CA1000:Do not declare static members on generic types")]
    public static partial class CSharpCodeRefactoringVerifier<TCodeRefactoring>
        where TCodeRefactoring : CodeRefactoringProvider, new()
    {
-      /// <inheritdoc cref="CodeRefactoringVerifier{TCodeRefactoring, TTest, TVerifier}.VerifyRefactoringAsync(string, string)"/>
+      /// <inheritdoc cref="CodeRefactoringVerifier{TCodeRefactoring,TTest,TVerifier}.VerifyRefactoringAsync(string, string)"/>
       public static async Task VerifyRefactoringAsync(string source, string fixedSource)
       {
          await VerifyRefactoringAsync(source, DiagnosticResult.EmptyDiagnosticResults, fixedSource);
