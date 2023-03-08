@@ -12,7 +12,7 @@ namespace UFG.AsyncMethodAnalysis;
 public class CancellationTokenAsyncAnalyzerCodeFixProvider : CodeFixProvider
 {
    public sealed override ImmutableArray<string> FixableDiagnosticIds =>
-      ImmutableArray.Create(AsyncAnalyzerAnalyzer.CancellationTokenRule.Id);
+      ImmutableArray.Create(AsyncMethodAnalyzer.CancellationTokenDiagnosticId);
 
    public sealed override FixAllProvider GetFixAllProvider()
    {
@@ -44,7 +44,7 @@ public class CancellationTokenAsyncAnalyzerCodeFixProvider : CodeFixProvider
          CodeAction.Create(
             title: CodeFixResources.CancellationCodeFixTitle,
             createChangedDocument: c => AddCancellationTokenParameterAsync(context.Document, declaration, c),
-            equivalenceKey: nameof(CodeFixResources.CancellationCodeFixTitle)),
+            equivalenceKey: AsyncMethodAnalyzer.CancellationTokenDiagnosticId),
          diagnostic);
    }
 

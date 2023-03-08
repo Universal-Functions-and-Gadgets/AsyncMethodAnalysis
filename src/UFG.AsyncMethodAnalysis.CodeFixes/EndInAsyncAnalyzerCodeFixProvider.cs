@@ -13,7 +13,7 @@ namespace UFG.AsyncMethodAnalysis;
 public class EndInAsyncAnalyzerCodeFixProvider : CodeFixProvider
 {
    public sealed override ImmutableArray<string> FixableDiagnosticIds =>
-      ImmutableArray.Create(AsyncAnalyzerAnalyzer.EndsInAsyncRule.Id);
+      ImmutableArray.Create(AsyncMethodAnalyzer.EndInAsyncDiagnosticId);
 
    public sealed override FixAllProvider GetFixAllProvider()
    {
@@ -44,8 +44,8 @@ public class EndInAsyncAnalyzerCodeFixProvider : CodeFixProvider
       context.RegisterCodeFix(
          CodeAction.Create(
             title: CodeFixResources.AsyncCodeFixTitle,
-            createChangedSolution: c => RenameAsyncMethodAsync(context.Document, declaration, c),
-            equivalenceKey: nameof(CodeFixResources.AsyncCodeFixTitle)),
+            createChangedSolution: ct => RenameAsyncMethodAsync(context.Document, declaration, ct),
+            equivalenceKey: AsyncMethodAnalyzer.EndInAsyncDiagnosticId),
          diagnostic);
    }
 

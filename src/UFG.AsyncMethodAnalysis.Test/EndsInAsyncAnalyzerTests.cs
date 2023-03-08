@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.Testing;
 using UFG.AsyncMethodAnalysis;
 using Xunit;
 using VerifyCS = UFG.AsyncMethodAnalysis.Test.CSharpCodeFixVerifier<
-   UFG.AsyncMethodAnalysis.AsyncAnalyzerAnalyzer,
+   UFG.AsyncMethodAnalysis.AsyncMethodAnalyzer,
    UFG.AsyncMethodAnalysis.EndInAsyncAnalyzerCodeFixProvider>;
 
 namespace AsyncAnalyzer.Test
@@ -77,7 +77,7 @@ namespace UFG.AsyncMethodAnalyzer.Attributes
         }
     }";
 
-         var expected = new[] { GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.EndsInAsyncRule, "MethodName") };
+         var expected = new[] { GetCSharpResultAt(0, AsyncMethodAnalyzer.EndsInAsyncRule, "MethodName") };
          await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
       }
 
@@ -130,8 +130,8 @@ namespace UFG.AsyncMethodAnalyzer.Attributes
 
          var expected = new[]
          {
-            GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.EndsInAsyncRule, "MethodName"),
-            GetCSharpResultAt(1, AsyncAnalyzerAnalyzer.EndsInAsyncRule, "MethodName")
+            GetCSharpResultAt(0, AsyncMethodAnalyzer.EndsInAsyncRule, "MethodName"),
+            GetCSharpResultAt(1, AsyncMethodAnalyzer.EndsInAsyncRule, "MethodName")
          };
          await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
       }
@@ -297,7 +297,7 @@ namespace ConsoleApplication1
          var test = new VerifyCS.Test()
          {
             TestState = { Sources = { global, IgnoreAttribute }, OutputKind = OutputKind.ConsoleApplication },
-            ExpectedDiagnostics = { GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.EndsInAsyncRule, "MethodName2") }
+            ExpectedDiagnostics = { GetCSharpResultAt(0, AsyncMethodAnalyzer.EndsInAsyncRule, "MethodName2") }
          };
 
          await test.RunAsync();

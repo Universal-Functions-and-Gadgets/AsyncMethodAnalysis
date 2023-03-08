@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.Testing;
 using UFG.AsyncMethodAnalysis;
 using Xunit;
 using VerifyCS = UFG.AsyncMethodAnalysis.Test.CSharpCodeFixVerifier<
-   UFG.AsyncMethodAnalysis.AsyncAnalyzerAnalyzer,
+   UFG.AsyncMethodAnalysis.AsyncMethodAnalyzer,
    UFG.AsyncMethodAnalysis.CancellationTokenAsyncAnalyzerCodeFixProvider>;
 
 namespace AsyncAnalyzer.Test;
@@ -57,7 +57,7 @@ public class CancellationTokenAnalyzerTests
         }
     }";
 
-      var expected = new[] { GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.CancellationTokenRule, "MethodName2Async") };
+      var expected = new[] { GetCSharpResultAt(0, AsyncMethodAnalyzer.CancellationTokenRule, "MethodName2Async") };
       await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
    }
 
@@ -98,7 +98,7 @@ public class CancellationTokenAnalyzerTests
         }
     }";
 
-      var expected = new[] { GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.CancellationTokenRule, "MethodName2Async") };
+      var expected = new[] { GetCSharpResultAt(0, AsyncMethodAnalyzer.CancellationTokenRule, "MethodName2Async") };
       await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
    }
 
@@ -139,7 +139,7 @@ public class CancellationTokenAnalyzerTests
         }
     }";
 
-      var expected = new[] { GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.CancellationTokenRule, "MethodName2Async") };
+      var expected = new[] { GetCSharpResultAt(0, AsyncMethodAnalyzer.CancellationTokenRule, "MethodName2Async") };
       await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
    }
 
@@ -186,8 +186,8 @@ public class CancellationTokenAnalyzerTests
 
       var expected = new[]
       {
-         GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.CancellationTokenRule, "MethodName2Async"),
-         GetCSharpResultAt(1, AsyncAnalyzerAnalyzer.CancellationTokenRule, "DoStuffAsync")
+         GetCSharpResultAt(0, AsyncMethodAnalyzer.CancellationTokenRule, "MethodName2Async"),
+         GetCSharpResultAt(1, AsyncMethodAnalyzer.CancellationTokenRule, "DoStuffAsync")
       };
       await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
    }
@@ -268,8 +268,8 @@ public class CancellationTokenAnalyzerTests
 
       var expected = new[]
       {
-         GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.CancellationTokenRule, "MethodNameAsync"),
-         GetCSharpResultAt(1, AsyncAnalyzerAnalyzer.CancellationTokenRule, "MethodNameAsync")
+         GetCSharpResultAt(0, AsyncMethodAnalyzer.CancellationTokenRule, "MethodNameAsync"),
+         GetCSharpResultAt(1, AsyncMethodAnalyzer.CancellationTokenRule, "MethodNameAsync")
       };
       await VerifyCS.VerifyCodeFixAsync(test, expected, fixtest);
    }
@@ -312,33 +312,105 @@ ConsoleApplication1.B
       {
          TestState =
          {
-            Sources = { global, IgnoreAttribute }, OutputKind = OutputKind.DynamicallyLinkedLibrary,
+            Sources = { global }, OutputKind = OutputKind.DynamicallyLinkedLibrary,
          },
          ExpectedDiagnostics =
          {
-            GetCSharpResultAt(0, AsyncAnalyzerAnalyzer.CancellationTokenRule, "MethodName2Async")
+            GetCSharpResultAt(0, AsyncMethodAnalyzer.CancellationTokenRule, "MethodName2Async")
          }
       };
-      test.TestState.AdditionalFiles.Add((AsyncAnalyzerAnalyzer.IgnoredFileName, ignoreText));
+      test.TestState.AdditionalFiles.Add((AsyncMethodAnalyzer.IgnoredFileName, ignoreText));
 
       await test.RunAsync();
    }
 
-   private static string IgnoreAttribute => """
-namespace UFG.AsyncMethodAnalyzer.Attributes
-{
-    [System.AttributeUsage(System.AttributeTargets.Assembly, AllowMultiple = true)]
-    public class IgnoreAsyncMethodAnalysisForAttribute : System.Attribute
-    {
-        public string FullTypeName { get; }
+   [Fact]
+   public async Task IgnoresGenericInterfaces()
+   {
+      var global = """
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-        public IgnoreAsyncMethodAnalysisForAttribute(string fullTypeName)
-        {
-            FullTypeName = fullTypeName;
-        }
-    }
+namespace ConsoleApplication1
+{
+   interface IOtherStuff<T>
+   {
+      Task<T> RepeatMeAsync(T a);
+   }
+
+   class C : IOtherStuff<int>
+   {
+      public Task<int> {|#0:MethodName2Async|}(int a) { return Task.FromResult(a + 1); }
+      public Task<int> RepeatMeAsync(int a) { return Task.FromResult(a); }
+   }
 }
 """;
+      var ignoreText = """
+# Comment describing something or another
+ConsoleApplication1.IOtherStuff`1
+""";
+
+      var test = new VerifyCS.Test()
+      {
+         TestState =
+         {
+            Sources = { global }, OutputKind = OutputKind.DynamicallyLinkedLibrary,
+         },
+         ExpectedDiagnostics =
+         {
+            GetCSharpResultAt(0, AsyncMethodAnalyzer.CancellationTokenRule, "MethodName2Async")
+         }
+      };
+      test.TestState.AdditionalFiles.Add((AsyncMethodAnalyzer.IgnoredFileName, ignoreText));
+
+      await test.RunAsync();
+   }
+
+   [Fact]
+   public async Task IgnoresGenericClasses()
+   {
+      var global = """
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ConsoleApplication1
+{
+   abstract class OtherStuff<T>
+   {
+      public abstract Task<T> RepeatMeAsync(T a);
+      public abstract Task<T> MyGen<TValue>(T a, TValue value);
+   }
+
+   class C : OtherStuff<int>
+   {
+      public Task<int> {|#0:MethodName2Async|}(int a) { return Task.FromResult(a + 1); }
+      public override Task<int> RepeatMeAsync(int a) { return Task.FromResult(a); }
+      public override Task<int> MyGen<TValue>(int a, TValue value) { return Task.FromResult(a); }
+   }
+}
+""";
+      var ignoreText = """
+# Comment describing something or another
+ConsoleApplication1.OtherStuff`1
+""";
+
+      var test = new VerifyCS.Test()
+      {
+         TestState =
+         {
+            Sources = { global }, OutputKind = OutputKind.DynamicallyLinkedLibrary,
+         },
+         ExpectedDiagnostics =
+         {
+            GetCSharpResultAt(0, AsyncMethodAnalyzer.CancellationTokenRule, "MethodName2Async")
+         }
+      };
+      test.TestState.AdditionalFiles.Add((AsyncMethodAnalyzer.IgnoredFileName, ignoreText));
+
+      await test.RunAsync();
+   }
 
    private static DiagnosticResult GetCSharpResultAt(
       int markupKey,
